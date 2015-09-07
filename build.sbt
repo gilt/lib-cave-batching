@@ -1,3 +1,5 @@
+import scoverage.ScoverageSbtPlugin.ScoverageKeys
+
 organization := "com.gilt"
 
 name := "lib-cave-batching"
@@ -14,6 +16,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "org.mockito" % "mockito-core" % "1.8.5" % "test"
 )
+
+ScoverageKeys.coverageExcludedPackages := "com.gilt.cavellc;com.gilt.cavellc.models"
 
 releaseCrossBuild := true
 

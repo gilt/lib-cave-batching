@@ -1,4 +1,4 @@
-# lib-cave-batching
+# lib-cave-batching [![Build Status](https://travis-ci.org/gilt/lib-cave-batching.svg?branch=master)](https://travis-ci.org/gilt/lib-cave-batching) [![Coverage Status](https://coveralls.io/repos/gilt/lib-cave-batching/badge.svg?branch=master&service=github)](https://coveralls.io/github/gilt/lib-cave-batching?branch=master)
 
 
 A library that allows batching of metrics when publishing to CAVE. It requires a CAVE client, which can be downloaded from the apidoc website.

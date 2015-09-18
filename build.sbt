@@ -11,7 +11,6 @@ crossScalaVersions := Seq("2.11.7", "2.10.5")
 libraryDependencies ++= Seq(
   "com.gilt" %% "gfc-logging" % "0.0.3",
   "com.gilt" %% "gfc-time" % "0.0.5",
-  "com.typesafe" % "config" % "1.3.0",
   "joda-time" % "joda-time" % "2.8.2",
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "org.mockito" % "mockito-core" % "1.8.5" % "test"

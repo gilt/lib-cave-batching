@@ -25,6 +25,7 @@ lazy val coverageSettings = Seq(
 )
 
 lazy val releaseSettings = Seq(
+  scalacOptions += "-target:jvm-1.7",
   releaseCrossBuild := true,
   releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   publishMavenStyle := true,

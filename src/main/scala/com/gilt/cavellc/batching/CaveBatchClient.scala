@@ -82,7 +82,7 @@ class CaveBatchClient(batchConfig: CaveBatchConfiguration, publishMetrics: Seq[M
         batch
       }
 
-      publishMetrics(sendBatch).withTimeout(batchConfig.publishTimeout).onComplete {
+      publishMetrics(sendBatch).withTimeout(batchConfig.publishTimeout, Some("Failed to send metrics batch")).onComplete {
         case Success(_) =>
           debug(s"batch of ${sendBatch.size} metrics successfully sent")
 
@@ -109,7 +109,7 @@ class CaveBatchClient(batchConfig: CaveBatchConfiguration, publishMetrics: Seq[M
         send(1)
       }
     )
-    timer.schedule(task, batchConfig.sendTimeout.toMillis)
+    timer.schedule(task, batchConfig.batchTimeout.toMillis)
     timerTask = Some(task)
   }
 

@@ -9,7 +9,7 @@ trait CaveBatchConfiguration {
   /**
    * How soon to send an incomplete batch after the first metric has been added.
    */
-  def sendTimeout: FiniteDuration = 30.seconds
+  def batchTimeout: FiniteDuration = 30.seconds
 
   /**
    * The maximum size of a full batch - once a batch grows to this size it will be sent immediately.

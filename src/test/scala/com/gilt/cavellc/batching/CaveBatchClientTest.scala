@@ -28,13 +28,13 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
   }
 
   private def doConfig(batchConfig: CaveBatchConfiguration,
-                       sendTimeout: FiniteDuration = 10.milliseconds,
+                       batchTimeout: FiniteDuration = 10.milliseconds,
                        publishTimeout: FiniteDuration = 10.milliseconds,
                        batchSize: Int = 10,
                        maxAttempts: Int = 2,
                        retryTimeout: FiniteDuration = 20.milliseconds) = {
     doReturn(publishTimeout).when(batchConfig).publishTimeout
-    doReturn(sendTimeout).when(batchConfig).sendTimeout
+    doReturn(batchTimeout).when(batchConfig).batchTimeout
     doReturn(batchSize).when(batchConfig).sendBatchSize
     doReturn(retryTimeout).when(batchConfig).retryTimeout
     doReturn(maxAttempts).when(batchConfig).maxAttempts
@@ -43,9 +43,9 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
   "CaveBatchClient" should "send no batches when no metrics are passed in" in {
     val fixture = newFixture()
 
-    doConfig(fixture.batchConfig, sendTimeout = 1.millisecond)
+    doConfig(fixture.batchConfig, batchTimeout = 1.millisecond)
 
-    Thread.sleep(100) // Sleep for much longer than the send timeout...
+    Thread.sleep(100) // Sleep for much longer than the batch timeout...
 
     fixture.callCounter.get shouldBe 0
   }
@@ -53,14 +53,15 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
   it should "send only a single batch when a single metric is passed in" in {
     val fixture = newFixture()
 
-    doConfig(fixture.batchConfig, sendTimeout = 1.millisecond)
+    doConfig(fixture.batchConfig, batchTimeout = 1.millisecond)
 
     val metric1 = Metric("met1", None, 182673L, 123.4D)
     fixture.client.createMetric(metric1)
 
-    Thread.sleep(100) // Sleep for much longer than the send timeout...
+    Thread.sleep(100) // Sleep for much longer than the batch timeout...
 
     fixture.callCounter.get shouldBe 1
+    fixture.metrics.size shouldBe 1
     fixture.metrics(0) shouldBe metric1
   }
 
@@ -75,7 +76,7 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
 
    val fixture = newFixture(timedFuture)
 
-    doConfig(fixture.batchConfig, sendTimeout = 1.second, batchSize = 3)
+    doConfig(fixture.batchConfig, batchTimeout = 1.second, batchSize = 3)
 
     val metric1 = Metric("met1", None, 182673L, 123.4D)
     val metric2 = Metric("met2", Some(Map("a" -> "b")), 182673L, 123.4D)
@@ -88,17 +89,18 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
     fixture.client.createMetric(metric3)
 
     fixture.callCounter.get shouldBe 1
+    fixture.metrics.size shouldBe 3
     fixture.metrics(0) shouldBe metric1
     fixture.metrics(1) shouldBe metric2
     fixture.metrics(2) shouldBe metric3
 
-    (afterNanos - beforeNanos) shouldBe < (fixture.batchConfig.sendTimeout.toNanos)
+    (afterNanos - beforeNanos) shouldBe < (fixture.batchConfig.batchTimeout.toNanos)
   }
 
   it should "continue to send batches after the first one so long as metrics feed through" in {
     val fixture = newFixture()
 
-    doConfig(fixture.batchConfig, sendTimeout = 10.millisecond)
+    doConfig(fixture.batchConfig, batchTimeout = 10.millisecond)
 
     val metric1 = Metric("met1", None, 182673L, 123.4D)
     val metric2 = Metric("met2", None, 182673L, 123.4D)
@@ -112,6 +114,7 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
     Thread.sleep(100)
 
     fixture.callCounter.get shouldBe 3
+    fixture.metrics.size shouldBe 3
     fixture.metrics(0) shouldBe metric1
     fixture.metrics(1) shouldBe metric2
     fixture.metrics(2) shouldBe metric3
@@ -120,14 +123,15 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
   it should "retry sending a batch while there remote call fails" in {
     val fixture = newFixture(Future.failed(new Exception("simulated comms failure")))
 
-    doConfig(fixture.batchConfig, sendTimeout = 1.millisecond, maxAttempts = 5, retryTimeout = 5.milliseconds)
+    doConfig(fixture.batchConfig, batchTimeout = 1.millisecond, maxAttempts = 5, retryTimeout = 5.milliseconds)
 
     val metric1 = Metric("met1", None, 182673L, 123.4D)
     fixture.client.createMetric(metric1)
 
-    Thread.sleep(500) // Sleep for much longer than the send timeout...
+    Thread.sleep(500) // Sleep for much longer than the batch timeout...
 
     fixture.callCounter.get shouldBe 5
+    fixture.metrics.size shouldBe 5
     fixture.metrics(0) shouldBe metric1
     fixture.metrics(1) shouldBe metric1
     fixture.metrics(2) shouldBe metric1
@@ -138,18 +142,42 @@ class CaveBatchClientTest extends FlatSpec with Matchers with MockitoSugar with 
   it should "retry sending a batch while there remote call is slow" in {
     val fixture = newFixture(Promise().future)
 
-    doConfig(fixture.batchConfig, sendTimeout = 1.millisecond, maxAttempts = 5, retryTimeout = 5.milliseconds)
+    doConfig(fixture.batchConfig, batchTimeout = 1.millisecond, maxAttempts = 5, retryTimeout = 5.milliseconds)
 
     val metric1 = Metric("met1", None, 182673L, 123.4D)
     fixture.client.createMetric(metric1)
 
-    Thread.sleep(500) // Sleep for much longer than the send timeout...
+    Thread.sleep(500) // Sleep for much longer than the batch timeout...
 
     fixture.callCounter.get shouldBe 5
+    fixture.metrics.size shouldBe 5
     fixture.metrics(0) shouldBe metric1
     fixture.metrics(1) shouldBe metric1
     fixture.metrics(2) shouldBe metric1
     fixture.metrics(3) shouldBe metric1
     fixture.metrics(4) shouldBe metric1
+  }
+
+  it should "not include new metrics in reties" in {
+    val fixture = newFixture(Promise().future)
+
+    doConfig(fixture.batchConfig, publishTimeout = 100.millis, batchTimeout = 100.milliseconds, retryTimeout = 1.milliseconds, maxAttempts = 2)
+
+    val metric1 = Metric("met1", None, 182673L, 123.4D)
+    val metric2 = Metric("met2", None, 182673L, 123.4D)
+
+    fixture.client.createMetric(metric1)
+    Thread.sleep(150)
+
+    fixture.callCounter.get shouldBe 1
+    fixture.client.createMetric(metric2)
+
+    Thread.sleep(150)
+
+    fixture.callCounter.get shouldBe 3
+    fixture.metrics.size shouldBe 3
+    fixture.metrics(0) shouldBe metric1
+    fixture.metrics(1) shouldBe metric1
+    fixture.metrics(2) shouldBe metric2
   }
 }

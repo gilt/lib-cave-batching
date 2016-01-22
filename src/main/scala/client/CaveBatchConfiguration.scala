@@ -7,16 +7,6 @@ import scala.concurrent.duration._
  */
 trait CaveBatchConfiguration {
   /**
-   * The organisation name for the metrics being sent to CAVE.
-   */
-  def organisationName: String
-
-  /**
-   * The Team Name for "team" metrics being sent to CAVE.
-   */
-  def teamName: String
-
-  /**
    * How soon to send an incomplete batch after the first metric has been added.
    */
   def sendTimeout: FiniteDuration = 30.seconds
@@ -36,4 +26,9 @@ trait CaveBatchConfiguration {
    * How long to delay before performing a retry on a failed communication with CAVE.
    */
   def retryTimeout: FiniteDuration = 120.seconds
+
+  /**
+    * How long to allow the publish call to take.
+    */
+  def publishTimeout: FiniteDuration = 10.seconds
 }

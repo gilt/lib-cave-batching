@@ -1,4 +1,4 @@
-package client
+package com.gilt.cavellc.batching
 
 import java.util.{Timer, TimerTask}
 

@@ -10,10 +10,10 @@ lazy val commonSettings = Seq(
   organization := "com.gilt",
   name := "lib-cave-batching",
   scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.11.7", "2.10.5"),
+  crossScalaVersions := Seq("2.11.8", "2.10.6"),
   libraryDependencies ++= Seq(
-    "com.gilt" %% "gfc-concurrent" % "0.3.0",
-    "joda-time" % "joda-time" % "2.9.2",
+    "com.gilt" %% "gfc-concurrent" % "0.3.3",
+    "joda-time" % "joda-time" % "2.9.4",
     "org.scalatest" %% "scalatest" % "2.2.4" % "test",
     "org.mockito" % "mockito-core" % "1.8.5" % "test"
   )

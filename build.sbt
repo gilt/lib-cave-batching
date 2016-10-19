@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
 lazy val commonSettings = Seq(
   organization := "com.gilt",
   name := "lib-cave-batching",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   crossScalaVersions := Seq("2.11.8", "2.10.6"),
   libraryDependencies ++= Seq(
     "com.gilt" %% "gfc-concurrent" % "0.3.3",

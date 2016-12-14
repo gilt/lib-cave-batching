@@ -13,7 +13,7 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq("2.11.8", "2.10.6"),
   libraryDependencies ++= Seq(
     "com.gilt" %% "gfc-concurrent" % "0.3.3",
-    "joda-time" % "joda-time" % "2.9.4",
+    "joda-time" % "joda-time" % "2.9.6",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test",
     "org.mockito" % "mockito-core" % "1.8.5" % "test"
   )

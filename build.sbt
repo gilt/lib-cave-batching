@@ -1,4 +1,4 @@
-import scoverage.ScoverageSbtPlugin.ScoverageKeys
+import scoverage.ScoverageKeys
 
 lazy val root = (project in file("."))
   .settings(commonSettings: _*)
